@@ -1,21 +1,21 @@
 [tool.poetry]
 name = "lightlightning"
-version = "0.0.0"
+version = "2.0.0"
 description = "Light-weight wrapper of PyTorch Lightning"
 authors = ["Tarepan"]
 readme = "README.md"
 repository = "https://github.com/tarepan/lightlightning"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-pytorch-lightning = "^1.4.9"
-omegaconf = "^2.2.2"
+python = "^3.10"
+lightning = "^2.0.0"
+omegaconf = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
+pytest = "^7.1"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pylint.messages_control]
