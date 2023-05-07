@@ -9,6 +9,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:3.10
 
 # PyTorch on CPU
 RUN pip3 --disable-pip-version-check --no-cache-dir install torch==2.0.0+cpu torchaudio==2.0.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 --disable-pip-version-check --no-cache-dir install 'lightning>=2.0.0,<2.1.0'
 
 # package dependency manager `poetry` without environment isolation (It is a job of Docker.)
 ENV POETRY_VIRTUALENVS_CREATE=false

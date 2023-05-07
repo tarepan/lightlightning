@@ -1,16 +1,14 @@
 """PyTorch Lightning checkpointing, logging and training"""
 
 
-from typing import Optional
 import os
 from dataclasses import dataclass
 from datetime import timedelta
 
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.utilities.cloud_io import get_filesystem
-from pytorch_lightning.core.datamodule import LightningDataModule
+import lightning as L                                          # pyright: ignore [reportMissingTypeStubs]
+from lightning.pytorch.callbacks import ModelCheckpoint        # pyright: ignore [reportMissingTypeStubs]
+from lightning.pytorch.loggers import TensorBoardLogger        # pyright: ignore [reportMissingTypeStubs]
+from lightning.fabric.utilities.cloud_io import get_filesystem # pyright: ignore [reportMissingTypeStubs]
 from omegaconf import MISSING
 
 
@@ -35,8 +33,8 @@ class CheckpointAndLogging:
 
     def __init__(self, conf: ConfCkptLog) -> None:
         # Checkpointing
-        ## Storing: [Trainer's `default_root_dir`](https://pytorch-lightning.readthedocs.io/en/stable/api/pytorch_lightning.trainer.trainer.Trainer.html#pytorch_lightning.trainer.trainer.Trainer.default_root_dir)
-        self.default_root_dir: Optional[str] = conf.dir_root
+        ## Storing: [Trainer's `default_root_dir`](https://lightning.ai/docs/pytorch/stable/api/pytorch_lightning.trainer.trainer.Trainer.html#lightning.pytorch.trainer.trainer.Trainer.params.default_root_dir)
+        self.default_root_dir: str | None = conf.dir_root
         self.ckpt_cb = ModelCheckpoint(
             dirpath=None, # Path is inferred by Trainer with `ckpt_log`
             train_time_interval=timedelta(minutes=15), # every 15 minutes
@@ -46,7 +44,7 @@ class CheckpointAndLogging:
         path_ckpt = os.path.join(conf.dir_root, conf.name_exp, conf.name_version, "checkpoints", "last.ckpt")
         ## Resuming: [Trainer.fit's `ckpt_path`](https://pytorch-lightning.readthedocs.io/en/stable/api/pytorch_lightning.trainer.trainer.Trainer.html#pytorch_lightning.trainer.trainer.Trainer.fit)
         exists = get_filesystem(path_ckpt).exists(path_ckpt) # type: ignore ; because of fsspec
-        self.ckpt_path: Optional[str] = path_ckpt if exists else None
+        self.ckpt_path: str | None = path_ckpt if exists else None
 
         # Logging
         ## [PL's TensorBoardLogger](https://pytorch-lightning.readthedocs.io/en/stable/api/pytorch_lightning.loggers.tensorboard.html)
@@ -62,14 +60,14 @@ class ConfTrain:
         val_interval_epoch - Interval epoch between validation
         profiler - Profiler setting
     """
-    gradient_clipping: Optional[float] = MISSING
+    gradient_clipping: float | None = MISSING
     max_epochs: int = MISSING
     val_interval_epoch: int = MISSING
-    profiler: Optional[str] = MISSING
+    profiler: str | None = MISSING
     ckpt_log: ConfCkptLog = ConfCkptLog()
 
 
-def train(model: pl.LightningModule, conf: ConfTrain, datamodule: LightningDataModule) -> None:
+def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningDataModule) -> None:
     """Train the PyTorch-Lightning model.
     """
 
@@ -77,9 +75,8 @@ def train(model: pl.LightningModule, conf: ConfTrain, datamodule: LightningDataM
     ckpt_log = CheckpointAndLogging(conf.ckpt_log)
 
     # Trainer for mixed precision training on fast accelerator
-    trainer = pl.Trainer(
-        accelerator="auto",
-        precision=16,
+    trainer = L.Trainer(
+        precision="16-mixed", # Better choice for recent hardware: "bf16-mixed"
         gradient_clip_val=conf.gradient_clipping,
         max_epochs=conf.max_epochs,
         check_val_every_n_epoch=conf.val_interval_epoch,
