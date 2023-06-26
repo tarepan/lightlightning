@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lightlightning"
-version = "2.0.0"
+version = "2.1.0"
 description = "Light-weight wrapper of PyTorch Lightning"
 authors = ["Tarepan"]
 readme = "README.md"

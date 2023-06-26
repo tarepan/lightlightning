@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from datetime import timedelta
 
+import torch
 import lightning as L                                          # pyright: ignore [reportMissingTypeStubs]
 from lightning.pytorch.callbacks import ModelCheckpoint        # pyright: ignore [reportMissingTypeStubs]
 from lightning.pytorch.loggers import TensorBoardLogger        # pyright: ignore [reportMissingTypeStubs]
@@ -70,6 +71,9 @@ class ConfTrain:
 def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningDataModule) -> None:
     """Train the PyTorch-Lightning model.
     """
+
+    # Fast non-deterministic training
+    torch.backends.cudnn.benchmark = True # pyright: ignore [reportGeneralTypeIssues, reportUnknownMemberType]
 
     # Harmonized setups of checkpointing/logging
     ckpt_log = CheckpointAndLogging(conf.ckpt_log)
