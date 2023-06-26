@@ -56,16 +56,18 @@ class CheckpointAndLogging:
 class ConfTrain:
     """Configuration of train.
     Args:
-        gradient_clipping - Maximum gradient L2 norm, clipped when bigger than this (None==∞)
-        max_epochs - Number of maximum training epoch
+        gradient_clipping  - Maximum gradient L2 norm, clipped when bigger than this (None==∞)
+        max_epochs         - Number of maximum training epoch
+        use_amp            - Whether to use Automatic-Mixed-Precision training (default: use)
         val_interval_epoch - Interval epoch between validation
-        profiler - Profiler setting
+        profiler           - Profiler setting
     """
-    gradient_clipping: float | None = MISSING
-    max_epochs: int = MISSING
-    val_interval_epoch: int = MISSING
-    profiler: str | None = MISSING
-    ckpt_log: ConfCkptLog = ConfCkptLog()
+    gradient_clipping:  float | None = MISSING
+    max_epochs:         int          = MISSING
+    val_interval_epoch: int          = MISSING
+    use_amp:            bool         = True
+    profiler:           str | None   = MISSING
+    ckpt_log:           ConfCkptLog  = ConfCkptLog()
 
 
 def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningDataModule) -> None:
@@ -80,7 +82,7 @@ def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningData
 
     # Trainer for mixed precision training on fast accelerator
     trainer = L.Trainer(
-        precision="16-mixed", # Better choice for recent hardware: "bf16-mixed"
+        precision="16-mixed" if conf.use_amp else "32", # Better choice for recent hardware: "bf16-mixed"
         gradient_clip_val=conf.gradient_clipping,
         max_epochs=conf.max_epochs,
         check_val_every_n_epoch=conf.val_interval_epoch,
