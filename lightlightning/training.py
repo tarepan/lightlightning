@@ -76,9 +76,6 @@ def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningData
     """Train the PyTorch-Lightning model.
     """
 
-    if conf.use_debug:
-        torch.autograd.set_detect_anomaly(True, check_nan=True)
-
     # Fast non-deterministic training
     torch.backends.cudnn.benchmark = True # pyright: ignore [reportGeneralTypeIssues, reportUnknownMemberType]
 
@@ -96,6 +93,7 @@ def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningData
         default_root_dir=ckpt_log.default_root_dir,
         logger=ckpt_log.logger,
         callbacks=[ckpt_log.ckpt_cb],
+        detect_anomaly=conf.use_debug,
     )
 
     # training
