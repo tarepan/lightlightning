@@ -61,18 +61,23 @@ class ConfTrain:
         use_amp            - Whether to use Automatic-Mixed-Precision training (default: use)
         val_interval_epoch - Interval epoch between validation
         profiler           - Profiler setting
+        use_debug          - Whether to use debug mode
     """
     gradient_clipping:  float | None = MISSING
     max_epochs:         int          = MISSING
     val_interval_epoch: int          = MISSING
     use_amp:            bool         = True
     profiler:           str | None   = MISSING
+    use_debug:          bool         = False
     ckpt_log:           ConfCkptLog  = ConfCkptLog()
 
 
 def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningDataModule) -> None:
     """Train the PyTorch-Lightning model.
     """
+
+    if conf.use_debug:
+        torch.autograd.set_detect_anomaly(True, check_nan=True)
 
     # Fast non-deterministic training
     torch.backends.cudnn.benchmark = True # pyright: ignore [reportGeneralTypeIssues, reportUnknownMemberType]
