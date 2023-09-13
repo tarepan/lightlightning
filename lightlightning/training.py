@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 import torch
-import lightning as L                                          # pyright: ignore [reportMissingTypeStubs]
-from lightning.pytorch.callbacks import ModelCheckpoint        # pyright: ignore [reportMissingTypeStubs]
-from lightning.pytorch.loggers import TensorBoardLogger        # pyright: ignore [reportMissingTypeStubs]
-from lightning.fabric.utilities.cloud_io import get_filesystem # pyright: ignore [reportMissingTypeStubs]
+import lightning as L                                                        # pyright: ignore [reportMissingTypeStubs]
+from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor # pyright: ignore [reportMissingTypeStubs]
+from lightning.pytorch.loggers import TensorBoardLogger                      # pyright: ignore [reportMissingTypeStubs]
+from lightning.fabric.utilities.cloud_io import get_filesystem               # pyright: ignore [reportMissingTypeStubs]
 from omegaconf import MISSING
 
 
@@ -62,6 +62,7 @@ class ConfTrain:
         val_interval_epoch - Interval epoch between validation
         profiler           - Profiler setting
         use_debug          - Whether to use debug mode
+        monitor_lr         - Whether to monitor LearningRate
     """
     gradient_clipping:  float | None = MISSING
     max_epochs:         int          = MISSING
@@ -69,6 +70,7 @@ class ConfTrain:
     use_amp:            bool         = True
     profiler:           str | None   = MISSING
     use_debug:          bool         = False
+    monitor_lr:         bool         = False
     ckpt_log:           ConfCkptLog  = ConfCkptLog()
 
 
@@ -82,6 +84,10 @@ def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningData
     # Harmonized setups of checkpointing/logging
     ckpt_log = CheckpointAndLogging(conf.ckpt_log)
 
+    # callbacks
+    callbacks = [ckpt_log.ckpt_cb]
+    callbacks += [LearningRateMonitor(logging_interval="epoch")] if conf.monitor_lr else []
+
     # Trainer for mixed precision training on fast accelerator
     trainer = L.Trainer(
         precision="16-mixed" if conf.use_amp else "32", # Better choice for recent hardware: "bf16-mixed"
@@ -92,7 +98,7 @@ def train(model: L.LightningModule, conf: ConfTrain, datamodule: L.LightningData
         # checkpoint/logging
         default_root_dir=ckpt_log.default_root_dir,
         logger=ckpt_log.logger,
-        callbacks=[ckpt_log.ckpt_cb],
+        callbacks=callbacks,
         detect_anomaly=conf.use_debug,
     )
 
